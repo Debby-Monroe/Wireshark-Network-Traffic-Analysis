@@ -1,34 +1,42 @@
-# Network Traffic Analysis: Protocol Triage & Payload Extraction
+# Network Traffic Analysis & Protocol Investigation Lab
 
 ## 📝 Project Overview
-This project demonstrates the core technical workflows of a Security Operations Center (SOC) Analyst using **Wireshark** to investigate network layers, validate protocol handshakes, and reconstruct application-layer objects out of raw packet streams. Through this hands-on lab, I analyzed multi-packet captures (`.pcap`) to differentiate normal system operations from anomalies, investigate unencrypted transactions, and parse network metadata.
+
+This project demonstrates core Security Operations Center (SOC) analyst workflows using **Wireshark** to investigate network traffic, validate protocol handshakes, and reconstruct application-layer objects from packet captures. Through hands-on analysis of `.pcap` files, I examined network communications, verified protocol behavior, and extracted application-layer metadata to distinguish normal activity from potential anomalies.
 
 ## 🛠️ Skills & Tools Demonstrated
+
 * **Tooling:** Wireshark, macOS Terminal
-* **Protocols Parsed:** TCP (Three-Way Handshake), HTTP (POST methods), PKIX-CMP
-* **Core Competencies:** Traffic triage, application layer data carving, security certificate tracking, and anomaly verification.
+* **Protocols Analyzed:** TCP (Three-Way Handshake), HTTP (POST Requests), PKIX-CMP
+* **Core Competencies:** Network traffic analysis, protocol investigation, packet inspection, application-layer analysis, and security reporting
 
 ---
 
-## 🔬 Investigation Breakdowns
+## 🔬 Investigation Breakdown
 
-### Phase 1: Live Protocol Handshakes & Session Validation
-Using a local packet stream tracking active web transactions over port `8080`, I monitored a complete session exchange from initiation to data transfer.
+### Phase 1: TCP Session Establishment & Protocol Validation
 
-#### 1. Verifying the TCP Three-Way Handshake
-Before data transmission occurred, a standard connection handshake was verified in the sequence:
-1. `59935 → 8080 [SYN]` (Client synchronizes)
-2. `8080 → 59935 [SYN, ACK]` (Server acknowledges)
-3. `59935 → 8080 [ACK]` (Client establishes connection)
+Using a packet capture containing web application traffic over port `8080`, I analyzed the network session lifecycle from connection establishment through application-layer communication.
 
-**Analyst Insight:** Reconnaissance attacks (like stealth port scans) frequently send rapid `[SYN]` packets across thousands of sequential ports and drop the connection immediately upon response. This session targeted a single, stable destination port and successfully completed the handshake to pass application traffic, ruling out reconnaissance scanning.
+#### Verifying the TCP Three-Way Handshake
+
+Before application data transmission occurred, the following TCP handshake was observed:
+
+1. `59935 → 8080 [SYN]`
+2. `8080 → 59935 [SYN, ACK]`
+3. `59935 → 8080 [ACK]`
+
+This sequence confirms successful session establishment between the client and server.
+
+**Analyst Insight:** Port scanning activity often generates large volumes of SYN packets across multiple destination ports without completing full sessions. In this capture, the communication remained focused on a single destination port and completed a normal TCP handshake before transferring application data, indicating legitimate session establishment.
 
 ![TCP Handshake and HTTP Packet Headers](./handshake_and_headers.png)
 
 ---
 
-### Phase 2: Application Layer Data Carving & Certificate Tracking
-Once the connection was securely established, the client initiated live `POST` requests. 
+### Phase 2: Application-Layer Analysis & Certificate Traffic Investigation
+
+After the TCP session was established, the client initiated HTTP POST requests carrying certificate-management data.
 
 ```text
 Protocol: Hypertext Transfer Protocol (HTTP)
@@ -36,3 +44,29 @@ Request Method: POST
 Content-Type: application/pkixcmp
 Payload Size: 578 bytes
 ```
+
+The packet inspection revealed PKIX Certificate Management Protocol (PKIX-CMP) traffic encapsulated within HTTP POST requests. This protocol is commonly used for certificate enrollment, renewal, and management operations within Public Key Infrastructure (PKI) environments.
+
+By examining the application-layer headers and payload metadata, I was able to identify the protocol purpose and validate the legitimacy of the transaction.
+
+---
+
+## 🔎 Investigation Summary
+
+The packet capture revealed a normal TCP session lifecycle consisting of connection establishment, application-layer communication, and successful data transfer.
+
+Analysis confirmed:
+
+- Successful TCP three-way handshake
+- HTTP POST activity over port 8080
+- PKIX-CMP certificate management traffic
+- No indicators of port scanning behavior
+- No malformed packets or protocol violations observed
+
+The traffic appeared consistent with legitimate application communication rather than suspicious or malicious activity.
+
+---
+
+## 📚 Key Takeaway
+
+This project demonstrates how packet analysis can be used to validate network communications, investigate protocol behavior, and distinguish normal operational traffic from suspicious activity. Using Wireshark, I traced session establishment, inspected application-layer requests, and interpreted packet-level evidence to support investigative conclusions.
